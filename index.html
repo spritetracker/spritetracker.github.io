@@ -924,17 +924,25 @@
             rows.get(baseId).themes[theme] = getStatusSymbol(card);
         });
 
-        const lines = ['```', '|NORMAL|GOLD|GUMMY|GALAXY', '✅Owned', '❌Missing', '-----------------------'];
-        Array.from(rows.keys()).sort((a, b) => {
-            const aIndex = ORIGINAL_BASE_ORDER.indexOf(a);
-            const bIndex = ORIGINAL_BASE_ORDER.indexOf(b);
-            return (aIndex === -1 ? 9999 : aIndex) - (bIndex === -1 ? 9999 : bIndex);
-        }).forEach(baseId => {
-            const row = rows.get(baseId);
-            const cells = themeOrder.filter(theme => row.themes[theme] !== undefined).map(theme => row.themes[theme]);
-            lines.push(row.name.padEnd(13, ' ') + '|' + cells.join('|') + '|');
-        });
-        lines.push('```');
+        const tableBaseOrder = [
+            'water', 'earth', 'fire', 'fishy',
+            'duck', 'ghost', 'demon', 'king',
+            'aura', 'striker', 'dream', 'punk',
+            'boss', 'grim', 'zeropoint', 'theburntpeanut'
+        ];
+
+        const dashLine = '-----------------------';
+        const lines = ['```', dashLine, '|NORMAL|GOLD|GUMMY|GALAXY', '✅Owned', '❌Missing', dashLine];
+        tableBaseOrder
+            .filter(baseId => rows.has(baseId))
+            .forEach(baseId => {
+                const row = rows.get(baseId);
+                const cells = themeOrder
+                    .filter(theme => row.themes[theme] !== undefined)
+                    .map(theme => row.themes[theme]);
+                lines.push(row.name.padEnd(13, ' ') + '|' + cells.join('|') + '|');
+            });
+        lines.push(dashLine, '```');
         return lines.join('\n');
     }
 
