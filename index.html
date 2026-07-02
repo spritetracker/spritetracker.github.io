@@ -753,6 +753,7 @@
 
     let state = {};
     let currentProgressFilter = 'all';
+    let DEFAULT_CARD_ORDER = [];
 
     function loadState() {
         try {
@@ -781,15 +782,27 @@
         });
     }
 
-    function enforceOriginalSpriteOrder() {
+    function getThemeSortIndex(card) {
+        const themeOrder = ['theme-Basic', 'theme-Gold', 'theme-Candy', 'theme-Galaxy', 'theme-Gem', 'theme-Holofoil', 'theme-Rift'];
+        const idx = themeOrder.findIndex(cls => card.classList.contains(cls));
+        return idx === -1 ? 9999 : idx;
+    }
+
+    function applyGrouping() {
         const grid = document.getElementById('spriteGrid');
-        if (!grid) return;
-        const cards = Array.from(grid.querySelectorAll('.sprite-card[data-id]'));
-        cards.sort((a, b) => {
-            const aIndex = ORIGINAL_SPRITE_ORDER.indexOf(a.getAttribute('data-id'));
-            const bIndex = ORIGINAL_SPRITE_ORDER.indexOf(b.getAttribute('data-id'));
-            return (aIndex === -1 ? 9999 : aIndex) - (bIndex === -1 ? 9999 : bIndex);
-        });
+        if (!grid || !DEFAULT_CARD_ORDER.length) return;
+
+        const groupByTheme = !!document.getElementById('group-theme-switch')?.checked;
+        const cards = DEFAULT_CARD_ORDER.slice();
+
+        if (groupByTheme) {
+            cards.sort((a, b) => {
+                const themeDiff = getThemeSortIndex(a) - getThemeSortIndex(b);
+                if (themeDiff !== 0) return themeDiff;
+                return DEFAULT_CARD_ORDER.indexOf(a) - DEFAULT_CARD_ORDER.indexOf(b);
+            });
+        }
+
         cards.forEach(card => grid.appendChild(card));
     }
 
@@ -841,6 +854,7 @@
     function renderAll() {
         document.querySelectorAll('.sprite-card[data-id]').forEach(renderCard);
         updateCounters();
+        applyGrouping();
         applyFilters();
         fixSpriteImageSources();
     }
@@ -990,6 +1004,10 @@
         document.getElementById('search')?.addEventListener('input', applyFilters);
         document.getElementById('theme-filter')?.addEventListener('change', applyFilters);
         document.getElementById('hide-mastered-switch')?.addEventListener('change', applyFilters);
+        document.getElementById('group-theme-switch')?.addEventListener('change', function () {
+            applyGrouping();
+            applyFilters();
+        });
 
         ['all', 'owned', 'unowned'].forEach(name => {
             document.getElementById('toggle-' + name)?.addEventListener('click', function () {
@@ -1008,7 +1026,7 @@
 
     window.addEventListener('DOMContentLoaded', function () {
         loadState();
-        enforceOriginalSpriteOrder();
+        DEFAULT_CARD_ORDER = Array.from(document.querySelectorAll('.sprite-card[data-id]'));
         fixSpriteImageSources();
         setupEvents();
         renderAll();
